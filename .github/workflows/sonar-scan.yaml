@@ -1,0 +1,50 @@
+name: Build and Analyze
+
+on:
+  push:
+    branches: [main, staging, dev]
+
+jobs:
+  sonarQube:
+    name: SonarQube Auto Project Creation & Scan
+    runs-on: ubuntu-latest
+
+    env:
+      SONAR_PROJECT_KEY: ${{ github.event.repository.name }}
+      SONAR_PROJECT_NAME: ${{ github.event.repository.name }}
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create SonarQube project if it doesn't exist
+        run: |
+          echo "Checking if SonarQube project exists: $SONAR_PROJECT_KEY"
+          response=$(curl -s -u ${SONAR_TOKEN}: \
+            "${SONAR_HOST_URL}/api/projects/search?projects=${SONAR_PROJECT_KEY}")
+
+          if ! echo "$response" | grep -q "\"key\":\"${SONAR_PROJECT_KEY}\""; then
+            echo "Project does not exist. Creating..."
+            curl -X POST -u ${SONAR_TOKEN}: \
+              "${SONAR_HOST_URL}/api/projects/create" \
+              -d "name=${SONAR_PROJECT_NAME}" \
+              -d "project=${SONAR_PROJECT_KEY}" \
+              -d "visibility=public"
+          else
+            echo "Project already exists. ✅"
+          fi
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Run SonarQube Analysis
+        uses: SonarSource/sonarqube-scan-action@v4
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.projectName=${{ env.SONAR_PROJECT_NAME }}
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
