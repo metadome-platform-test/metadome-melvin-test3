@@ -2,8 +2,24 @@ name: CI/CD on Cloud Run
 
 on:
   workflow_dispatch:
-  push:
-    branches: [staging, dev,development]
+    inputs:
+      client:
+        type: choice
+        description: Client for which deployment is being done
+        options: 
+        - GM
+      region:
+        type: choice
+        description: Region for which the deployment is being done
+        options: 
+        - asia
+        - asia-south1
+      environment:
+        type: choice
+        description: Type of environment
+        options:
+        - dev
+        - staging
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
