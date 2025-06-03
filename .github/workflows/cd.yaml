@@ -3,7 +3,7 @@ name: CI/CD on Cloud Run
 on:
   workflow_dispatch:
   push:
-    branches: [staging, dev]
+    branches: [staging, dev,development]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
